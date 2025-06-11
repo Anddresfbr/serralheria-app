@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serralheria Bom Preço - Gerenciador de Orçamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e5e7eb;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6);
+            align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-content {
+            background-color: #1f2937; color: #e5e7eb; margin: auto; padding: 25px;
+            border: 1px solid #374151; width: 90%; max-width: 600px; 
+            border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding-bottom: 1rem; border-bottom: 1px solid #374151; margin-bottom: 1.5rem;
+            font-size: 1.25rem; font-weight: 600; color: #60a5fa;
+        }
+        .modal-footer {
+            padding-top: 1rem; border-top: 1px solid #374151; margin-top: 1.5rem;
+        }
+        .logo-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 1.5rem; }
+        .logo-container img { max-width: 150px; margin-bottom: 0.75rem; border-radius: 0.5rem; background-color: white; padding: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .orcamento-total-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb; 
+        }
+         .orcamento-total-item:last-child {
+            border-bottom: none;
+         }
+        .orcamento-total-label {
+            font-weight: 500; 
+            color: #4b5563; 
+        }
+        .orcamento-total-value {
+            font-weight: 600; 
+            color: #1f2937; 
+        }
+        .orcamento-total-geral .orcamento-total-label,
+        .orcamento-total-geral .orcamento-total-value {
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            color: #166534; 
+        }
+        .input-currency, .input-percent {
+            width: 80px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem; 
+            text-align: right;
+        }
+
+        @media print {
+            body > *:not(#printableArea) {
+                display: none !important;
+            }
+            #printableArea {
+                visibility: visible !important;
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                font-size: 12px;
+                color: #000 !important;
+            }
+            #printableArea h1, #printableArea h2, #printableArea h3, #printableArea h4 { color: #000 !important; }
+            #printableArea .print-header img { max-width: 100px; margin-bottom: 10px; }
+            #printableArea table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+            #printableArea th, #printableArea td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+            #printableArea th { background-color: #f0f0f0; }
+            #printableArea .print-summary-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+            #printableArea .print-summary-item.total { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 8px; margin-top: 8px; }
+            .no-print { display: none !important; }
+        }
+        #printableArea { display: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 min-h-screen">
+
+    <div id="login-screen" class="bg-white shadow-2xl rounded-xl p-10 w-full max-w-md text-center" style="display: none;">
+        <div class="logo-container">
+            <img src="" alt="Logo da Serralheria Bom Preço" id="loginLogo">
+            <h1 id="loginCompanyName" class="text-3xl font-bold text-sky-600"></h1>
+        </div>
+        <p class="text-slate-600 mb-8">Bem-vindo ao Gerenciador de Orçamentos.</p>
+        <button id="google-login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center space-x-3">
+            <svg class="w-6 h-6" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.012 36.49 44 30.686 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+            <span>Entrar com Google</span>
+        </button>
+        <p id="loginFeedback" class="mt-4 text-sm text-red-600"></p>
+    </div>
+
+    <div id="main-app-content" class="w-full" style="display: none;">
+        <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-3xl text-slate-800 no-print mx-auto">
+            <header class="mb-8 text-center">
+                <div class="logo-container">
+                    <img src="" alt="Logo da Serralheria Bom Preço" id="companyLogo">
+                    <h1 id="mainCompanyName" class="text-3xl md:text-4xl font-bold text-sky-600"></h1>
+                </div>
+                <p class="text-slate-600 mt-2">Gerenciador de Orçamentos</p>
+                <div class="mt-4 text-xs text-slate-500">
+                    <p>Usuário: <span id="userEmailDisplay" class="font-mono text-slate-700">Carregando...</span></p>
+                    <button id="logout-btn" class="mt-2 text-sm text-red-600 hover:underline">Sair</button>
+                </div>
+            </header>
+            
+            <section id="clients-section" class="mb-10">
+                <h2 class="text-2xl font-semibold text-sky-600 mb-6 text-center">Gerenciar Clientes</h2>
+
+                <div class="mb-8 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                    <h3 id="clientFormTitle" class="text-lg font-semibold text-sky-700 mb-3">Cadastrar Novo Cliente</h3>
+                    <form id="addClientForm" class="space-y-4">
+                        <input type="hidden" id="editingClientId">
+                        <div>
+                            <label for="clientName" class="block text-sm font-medium text-sky-700 mb-1">Nome Completo / Razão Social</label>
+                            <input type="text" id="clientName" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Nome do cliente">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="clientDocumentType" class="block text-sm font-medium text-sky-700 mb-1">Tipo de Documento</label>
+                                <select id="clientDocumentType" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none">
+                                    <option value="cpf">Pessoa Física (CPF)</option>
+                                    <option value="cnpj">Pessoa Jurídica (CNPJ)</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="clientDocument" class="block text-sm font-medium text-sky-700 mb-1">CPF / CNPJ</label>
+                                <input type="text" id="clientDocument" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="clientPhone" class="block text-sm font-medium text-sky-700 mb-1">Telefone / WhatsApp</label>
+                                <input type="text" id="clientPhone" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="(99) 99999-9999">
+                            </div>
+                            <div>
+                                <label for="clientEmail" class="block text-sm font-medium text-sky-700 mb-1">Email</label>
+                                <input type="email" id="clientEmail" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="email@exemplo.com">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="md:col-span-1">
+                                <label for="clientCep" class="block text-sm font-medium text-sky-700 mb-1">CEP</label>
+                                <input type="text" id="clientCep" maxlength="9" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="00000-000">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label for="clientStreet" class="block text-sm font-medium text-sky-700 mb-1">Rua / Logradouro</label>
+                                <input type="text" id="clientStreet" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                             <div class="md:col-span-1">
+                                <label for="clientNumber" class="block text-sm font-medium text-sky-700 mb-1">Número</label>
+                                <input type="text" id="clientNumber" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label for="clientNeighborhood" class="block text-sm font-medium text-sky-700 mb-1">Bairro</label>
+                                <input type="text" id="clientNeighborhood" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                             <div class="md:col-span-3">
+                                <label for="clientCity" class="block text-sm font-medium text-sky-700 mb-1">Cidade</label>
+                                <input type="text" id="clientCity" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label for="clientState" class="block text-sm font-medium text-sky-700 mb-1">Estado (UF)</label>
+                                <input type="text" id="clientState" maxlength="2" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-end space-x-4 pt-2">
+                             <button type="button" id="btnCancelEditClient" class="text-sm text-slate-600 hover:underline" style="display: none;">Cancelar Edição</button>
+                             <button type="submit" id="btnSaveClient" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-6 rounded-lg transition">Salvar Cliente</button>
+                        </div>
+                        <div id="clientFormFeedback" class="mt-3 text-sm text-center"></div>
+                    </form>
+                </div>
+
+                <h3 class="text-xl font-semibold text-sky-700 mb-4 text-center">Clientes Cadastrados</h3>
+                 <div class="mb-6">
+                    <label for="searchClients" class="sr-only">Pesquisar Clientes</label>
+                    <input type="text" id="searchClients" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Pesquisar por nome, CPF/CNPJ ou telefone...">
+                </div>
+                <div id="clientsList" class="space-y-4">
+                </div>
+                <p id="noClientsMessage" class="text-slate-500 text-center p-4 border-2 border-dashed border-slate-300 rounded-md" style="display: none;">Nenhum cliente cadastrado.</p>
+            </section>
+
+            <hr class="border-slate-300 my-10">
+
+            <section id="orcamento-section" class="mb-10">
+                <h2 id="orcamentoFormTitle" class="text-2xl font-semibold text-sky-600 mb-6 text-center">Criar Novo Orçamento</h2>
+                <div class="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-4">
+                    <input type="hidden" id="editingBudgetId">
+                    <div>
+                        <label for="orcamentoClienteNome" class="block text-sm font-medium text-sky-700 mb-1">Nome do Cliente</label>
+                        <input type="text" id="orcamentoClienteNome" list="clientDatalist" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Selecione ou digite o nome do cliente">
+                        <datalist id="clientDatalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="orcamentoServicoDescricao" class="block text-sm font-medium text-sky-700 mb-1">Descrição do Serviço/Orçamento</label>
+                        <textarea id="orcamentoServicoDescricao" rows="3" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Ex: Fabricação e instalação de grade..."></textarea>
+                    </div>
+                </div>
+                <div class="mb-6 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                    <h3 class="text-lg font-semibold text-sky-700 mb-3">Adicionar Item ao Orçamento</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                        <div class="md:col-span-3">
+                            <label for="searchMaterialToAdd" class="block text-sm font-medium text-sky-700 mb-1">Pesquisar Material</label>
+                            <input type="text" id="searchMaterialToAdd" list="materialDatalist" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Digite para pesquisar um material...">
+                            <datalist id="materialDatalist"></datalist>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="quantidadeMaterialOrcamento" class="block text-sm font-medium text-sky-700 mb-1">Quantidade</label>
+                            <input type="number" id="quantidadeMaterialOrcamento" min="0.01" step="any" value="1" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400">
+                        </div>
+                        <button id="btnAdicionarMaterialOrcamento" class="md:col-span-1 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition">Adicionar</button>
+                    </div>
+                    <div id="orcamentoFormFeedback" class="mt-3 text-sm"></div>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-xl font-semibold text-sky-700 mb-4">Itens do Orçamento Atual</h3>
+                    <div id="orcamentoItensList" class="space-y-3 mb-4">
+                        <p id="orcamentoVazioMsg" class="text-slate-500 text-center p-4 border-2 border-dashed border-slate-300 rounded-md">Nenhum item.</p>
+                    </div>
+                    <div class="mt-6 p-4 bg-slate-100 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold text-sky-700 mb-3 text-center">Resumo do Orçamento</h4>
+                        <div class="space-y-2">
+                            <div class="orcamento-total-item"><span class="orcamento-total-label">Total Materiais:</span><span class="orcamento-total-value">R$ <span id="orcamentoTotalMateriais">0.00</span></span></div>
+                            <div class="orcamento-total-item">
+                                <span class="orcamento-total-label">Mão de Obra (<input type="number" id="percentualMaoDeObra" value="120" min="0" class="input-percent"> %):</span>
+                                <span class="orcamento-total-value">R$ <span id="orcamentoValorMaoDeObra">0.00</span></span>
+                            </div>
+                            <div class="orcamento-total-item"><span class="orcamento-total-label">Subtotal (Materiais + M.O.):</span><span class="orcamento-total-value">R$ <span id="orcamentoSubtotalComMaoDeObra">0.00</span></span></div>
+                            <div class="orcamento-total-item"><span class="orcamento-total-label">ISSQN (2% sobre Subtotal):</span><span class="orcamento-total-value">R$ <span id="orcamentoValorISSQN">0.00</span></span></div>
+                            <div class="orcamento-total-item">
+                                <span class="orcamento-total-label">Frete:</span>
+                                <div class="flex items-center">
+                                    <span class="mr-1">R$</span>
+                                    <input type="number" id="valorFrete" value="0" min="0" step="0.01" class="input-currency">
+                                </div>
+                            </div>
+                            <div class="orcamento-total-item orcamento-total-geral pt-3 mt-2 border-t-2 border-sky-500"><span class="orcamento-total-label">TOTAL DO ORÇAMENTO:</span><span class="orcamento-total-value">R$ <span id="orcamentoTotalFinal">0.00</span></span></div>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button id="btnSalvarOrcamento" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-8 rounded-lg transition">Salvar Orçamento</button>
+                        <button id="btnImprimirOrcamento" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition">Imprimir / Gerar PDF</button>
+                    </div>
+                    <div id="cancelEditContainer" class="mt-4 text-center" style="display: none;">
+                        <button id="btnCancelarEdicao" class="text-sm text-red-600 hover:underline">Cancelar Edição</button>
+                    </div>
+                     <div id="salvarOrcamentoFeedback" class="mt-4 text-sm text-center"></div>
+                </div>
+            </section>
+
+            <hr class="border-slate-300 my-10">
+            
+            <section id="saved-budgets-section" class="mb-10">
+                <h2 class="text-2xl font-semibold text-sky-600 mb-6 text-center">Orçamentos Salvos</h2>
+                <div class="mb-6 flex items-center space-x-2">
+                    <div class="flex-grow">
+                        <label for="searchSavedBudgets" class="block text-sm font-medium text-sky-700 mb-1">Pesquisar Orçamentos</label>
+                        <input type="text" id="searchSavedBudgets" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Nome do cliente, descrição ou item...">
+                    </div>
+                    <button id="btnSearchSavedBudgets" class="self-end px-5 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500">Pesquisar</button>
+                </div>
+                <div id="savedBudgetsList" class="space-y-4" style="display: none;"></div>
+                <p id="loadingSavedBudgetsMessage" class="text-slate-500 text-center">Carregando orçamentos salvos...</p>
+                <p id="savedBudgetsInfoMessage" class="text-slate-500 text-center p-4 border-2 border-dashed border-slate-300 rounded-md" style="display: none;">Digite e clique em "Pesquisar" para ver os orçamentos salvos.</p>
+                <p id="noSavedBudgetsMessage" class="text-slate-500 text-center" style="display: none;">Nenhum orçamento salvo encontrado ou correspondente à pesquisa.</p>
+            </section>
+
+            <hr class="border-slate-300 my-10">
+
+            <section id="form-section" class="mb-8">
+                <h2 class="text-xl font-semibold text-sky-700 mb-4 text-center">Cadastrar Novo Material no Catálogo</h2>
+                <form id="addMaterialForm" class="space-y-6">
+                    <div>
+                        <label for="materialName" class="block text-sm font-medium text-sky-700 mb-1">Nome</label>
+                        <input type="text" id="materialName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Ex: Barra de Ferro Chato 1/8">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="materialUnit" class="block text-sm font-medium text-sky-700 mb-1">Unidade</label>
+                            <input type="text" id="materialUnit" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Ex: Metro, KG, Unidade">
+                        </div>
+                        <div>
+                            <label for="materialPrice" class="block text-sm font-medium text-sky-700 mb-1">Preço (R$)</label>
+                            <input type="number" id="materialPrice" step="0.01" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Ex: 25.50">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg transition">Adicionar ao Catálogo</button>
+                </form>
+                <div id="formFeedback" class="mt-4 text-sm"></div>
+            </section>
+
+            <hr class="border-slate-300 my-10">
+
+            <section id="list-section" class="mb-10">
+                 <div class="mb-6 flex items-center space-x-2">
+                    <div class="flex-grow">
+                        <label for="searchMaterials" class="block text-sm font-medium text-sky-700 mb-1">Pesquisar Catálogo</label>
+                        <input type="text" id="searchMaterials" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-sky-500 outline-none placeholder-slate-400" placeholder="Nome do material...">
+                    </div>
+                    <button id="btnSearchMaterials" class="self-end px-5 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500">Pesquisar</button>
+                </div>
+                <h2 class="text-2xl font-semibold text-sky-600 mb-6 text-center">Catálogo de Materiais</h2>
+                <div id="materialsList" class="space-y-4" style="display: none;"></div>
+                <p id="loadingMessage" class="text-slate-500 text-center">Carregando catálogo...</p>
+                <p id="catalogInfoMessage" class="text-slate-500 text-center p-4 border-2 border-dashed border-slate-300 rounded-md" style="display: none;">Digite e clique em "Pesquisar" para ver.</p>
+                <p id="noResultsMessage" class="text-slate-500 text-center" style="display: none;">Nenhum material encontrado.</p>
+            </section>
+        </div>
+    </div>
+
+
+    <div id="printableArea">
+        <div class="print-header" style="text-align: center; margin-bottom: 20px;">
+            <img src="" alt="Logo da Empresa" id="printLogoImage" style="max-width: 100px; margin-bottom: 10px;"> 
+            <h1 id="printCompanyName" style="font-size: 20px; margin-bottom: 5px;"></h1>
+            <p id="printCompanyAddress" style="font-size: 10px; margin-bottom: 2px;"></p>
+            <p id="printCompanyContact" style="font-size: 10px;"></p>
+        </div>
+        <hr style="margin-bottom: 15px;">
+        <h2 style="font-size: 18px; margin-bottom: 10px; text-align: center;">ORÇAMENTO</h2>
+        <div style="margin-bottom: 15px;">
+            <p><strong>Cliente:</strong> <span id="printClienteNome"></span></p>
+            <p><strong>Data:</strong> <span id="printDataOrcamento"></span></p>
+            <p><strong>Descrição do Serviço:</strong> <span id="printServicoDescricao"></span></p>
+        </div>
+        <table id="printItensTable">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qtd.</th>
+                    <th>Un.</th>
+                    <th>Preço Unit. (R$)</th>
+                    <th>Subtotal (R$)</th>
+                </tr>
+            </thead>
+            <tbody id="printItensTableBody">
+            </tbody>
+        </table>
+        <div id="printSummary" style="margin-top: 20px; padding-top:10px; border-top: 1px solid #ccc;">
+             <div class="print-summary-item">
+                <span>Total Materiais:</span>
+                <span id="printTotalMateriais">R$ 0.00</span>
+            </div>
+            <div class="print-summary-item">
+                <span id="printLabelMaoDeObra">Mão de Obra (120%):</span> 
+                <span id="printMaoDeObra">R$ 0.00</span>
+            </div>
+            <div class="print-summary-item">
+                <span>Subtotal (Materiais + M.O.):</span>
+                <span id="printSubtotalComMaoDeObra">R$ 0.00</span>
+            </div>
+            <div class="print-summary-item">
+                <span>ISSQN (2%):</span>
+                <span id="printISSQN">R$ 0.00</span>
+            </div>
+            <div class="print-summary-item">
+                <span>Frete:</span>
+                <span id="printValorFrete">R$ 0.00</span>
+            </div>
+            <div class="print-summary-item total" style="margin-top:10px; padding-top:5px; border-top: 2px solid #000;">
+                <span>TOTAL GERAL:</span>
+                <span id="printTotalFinal">R$ 0.00</span>
+            </div>
+        </div>
+         <div style="margin-top: 30px; font-size: 10px; text-align: center;">
+            <p>Observações: [Espaço para observações ou validade do orçamento]</p>
+            <p style="margin-top: 20px;">_________________________________________</p>
+            <p>Assinatura do Cliente</p>
+        </div>
+    </div>
+
+
+    <div id="confirmDeleteMaterialModal" class="modal no-print">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar Exclusão de Material</div>
+            <p id="confirmDeleteMaterialMessage" class="text-slate-300 my-6 text-lg text-center">Tem certeza que deseja excluir este material do catálogo?</p>
+            <div class="modal-footer flex justify-end space-x-4">
+                <button id="cancelDeleteMaterial" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-md transition-colors">Cancelar</button>
+                <button id="confirmDeleteMaterial" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">Excluir</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirmDeleteBudgetModal" class="modal no-print">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar Exclusão de Orçamento</div>
+            <p id="confirmDeleteBudgetMessage" class="text-slate-300 my-6 text-lg text-center">Tem certeza que deseja excluir este orçamento?</p>
+            <div class="modal-footer flex justify-end space-x-4">
+                <button id="cancelDeleteBudget" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-md transition-colors">Cancelar</button>
+                <button id="confirmDeleteBudget" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">Excluir</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirmDeleteClientModal" class="modal no-print">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar Exclusão de Cliente</div>
+            <p id="confirmDeleteClientMessage" class="text-slate-300 my-6 text-lg text-center">Tem certeza que deseja excluir este cliente?</p>
+            <div class="modal-footer flex justify-end space-x-4">
+                <button id="cancelDeleteClient" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-md transition-colors">Cancelar</button>
+                <button id="confirmDeleteClient" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">Excluir</button>
+            </div>
+        </div>
+    </div>
+    <div id="editMaterialModal" class="modal no-print">
+         <div class="modal-content">
+            <div class="modal-header">Editar Material do Catálogo</div>
+            <form id="editMaterialForm" class="space-y-5 mt-4">
+                <input type="hidden" id="editMaterialId">
+                <div>
+                    <label for="editMaterialName" class="block text-sm font-medium text-sky-300 mb-1">Nome</label>
+                    <input type="text" id="editMaterialName" required class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-sky-500 outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="editMaterialUnit" class="block text-sm font-medium text-sky-300 mb-1">Unidade</label>
+                        <input type="text" id="editMaterialUnit" required class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label for="editMaterialPrice" class="block text-sm font-medium text-sky-300 mb-1">Preço (R$)</label>
+                        <input type="number" id="editMaterialPrice" step="0.01" required class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                </div>
+                <div id="editFormFeedback" class="mt-3 text-sm"></div>
+                <div class="modal-footer flex justify-end space-x-4">
+                    <button type="button" id="cancelEditMaterial" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-md">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="viewBudgetModal" class="modal no-print"> 
+        <div class="modal-content">
+            <div class="modal-header" id="viewBudgetModalTitle">Detalhes do Orçamento</div>
+            <div id="viewBudgetModalBody" class="mt-4 space-y-3 text-sm">
+                </div>
+            <div id="viewBudgetModalFooter" class="modal-footer flex justify-end space-x-4">
+                 <button id="printFromModalBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">Imprimir</button>
+                <button id="closeViewBudgetModal" class="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-100 rounded-md">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CÓDIGO JAVASCRIPT COMPLETO ABAIXO ---
+        
+        const firebaseConfig = {
+          apiKey: "AIzaSyDNoUVzHRmYNnfd-Vi9yskTlugIV2HsZQ4",
+          authDomain: "app-serralheria-c5525.firebaseapp.com",
+          projectId: "app-serralheria-c5525",
+          storageBucket: "app-serralheria-c5525.appspot.com", 
+          messagingSenderId: "838030423072",
+          appId: "1:838030423072:web:ba1f50774cd612e60b7845"
+        };
+        
+        const appId = firebaseConfig.projectId;
+
+        const NOME_EMPRESA = "Serralheria Bom Preço";
+        const ENDERECO_EMPRESA = "RUA SÃO MATEUS, 24 - BAIRRO NOVA SANTA MARTA - SANTA MARIA / RS - CEP: 97037-008";
+        const CONTATO_EMPRESA = "CNPJ: 11.586.234/0001-89 | Fone/WhatsApp: (55) 3226-1949";
+        const LOGO_URL = "https://i.imgur.com/RH15o8N.jpeg"; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null;
+        let materialsCollectionRef = null;
+        let savedBudgetsCollectionRef = null; 
+        let clientsCollectionRef = null;
+        let allMaterials = [];
+        let orcamentoAtual = []; 
+        let allSavedBudgets = [];
+        let allClients = [];
+        let unsubscribeMaterials = null;
+        let unsubscribeBudgets = null;
+        let unsubscribeClients = null;
+
+        const loginScreen = document.getElementById('login-screen');
+        const mainAppContent = document.getElementById('main-app-content');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const loginFeedback = document.getElementById('loginFeedback');
+        const loginLogo = document.getElementById('loginLogo');
+        const loginCompanyName = document.getElementById('loginCompanyName');
+
+        const addMaterialForm = document.getElementById('addMaterialForm');
+        const materialsListDiv = document.getElementById('materialsList');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const catalogInfoMessage = document.getElementById('catalogInfoMessage');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const formFeedback = document.getElementById('formFeedback');
+        const companyLogo = document.getElementById('companyLogo');
+        const searchMaterialsInput = document.getElementById('searchMaterials');
+        const btnSearchMaterials = document.getElementById('btnSearchMaterials'); 
+
+        const confirmDeleteMaterialModal = document.getElementById('confirmDeleteMaterialModal');
+        const confirmDeleteMaterialMessage = document.getElementById('confirmDeleteMaterialMessage');
+        const cancelDeleteMaterial = document.getElementById('cancelDeleteMaterial');
+        const confirmDeleteMaterial = document.getElementById('confirmDeleteMaterial');
+        
+        const confirmDeleteBudgetModal = document.getElementById('confirmDeleteBudgetModal');
+        const confirmDeleteBudgetMessage = document.getElementById('confirmDeleteBudgetMessage');
+        const cancelDeleteBudget = document.getElementById('cancelDeleteBudget');
+        const confirmDeleteBudget = document.getElementById('confirmDeleteBudget');
+        
+        const confirmDeleteClientModal = document.getElementById('confirmDeleteClientModal');
+        const confirmDeleteClientMessage = document.getElementById('confirmDeleteClientMessage');
+        const cancelDeleteClient = document.getElementById('cancelDeleteClient');
+        const confirmDeleteClient = document.getElementById('confirmDeleteClient');
+        
+        let itemToDeleteId = null;
+        let itemTypeToDelete = ''; 
+        
+        const editMaterialModal = document.getElementById('editMaterialModal');
+        const editMaterialForm = document.getElementById('editMaterialForm');
+        const cancelEditMaterialBtn = document.getElementById('cancelEditMaterial');
+        const editFormFeedback = document.getElementById('editFormFeedback');
+
+        const orcamentoClienteNomeInput = document.getElementById('orcamentoClienteNome');
+        const clientDatalist = document.getElementById('clientDatalist');
+        const orcamentoServicoDescricaoInput = document.getElementById('orcamentoServicoDescricao');
+        const searchMaterialToAddInput = document.getElementById('searchMaterialToAdd');
+        const materialDatalist = document.getElementById('materialDatalist');
+        const quantidadeMaterialOrcamentoInput = document.getElementById('quantidadeMaterialOrcamento');
+        const btnAdicionarMaterialOrcamento = document.getElementById('btnAdicionarMaterialOrcamento');
+        const orcamentoItensListDiv = document.getElementById('orcamentoItensList');
+        const orcamentoVazioMsg = document.getElementById('orcamentoVazioMsg');
+        const orcamentoFormFeedback = document.getElementById('orcamentoFormFeedback');
+        const btnImprimirOrcamento = document.getElementById('btnImprimirOrcamento');
+        const btnSalvarOrcamento = document.getElementById('btnSalvarOrcamento');
+        const salvarOrcamentoFeedback = document.getElementById('salvarOrcamentoFeedback');
+        const percentualMaoDeObraInput = document.getElementById('percentualMaoDeObra'); 
+        const valorFreteInput = document.getElementById('valorFrete'); 
+        const cancelEditContainer = document.getElementById('cancelEditContainer');
+        const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+
+        const orcamentoTotalMateriaisSpan = document.getElementById('orcamentoTotalMateriais');
+        const orcamentoValorMaoDeObraSpan = document.getElementById('orcamentoValorMaoDeObra');
+        const orcamentoSubtotalComMaoDeObraSpan = document.getElementById('orcamentoSubtotalComMaoDeObra');
+        const orcamentoValorISSQNSpan = document.getElementById('orcamentoValorISSQN');
+        const orcamentoTotalFinalSpan = document.getElementById('orcamentoTotalFinal');
+
+        const searchSavedBudgetsInput = document.getElementById('searchSavedBudgets');
+        const btnSearchSavedBudgets = document.getElementById('btnSearchSavedBudgets');
+        const savedBudgetsListDiv = document.getElementById('savedBudgetsList');
+        const loadingSavedBudgetsMessage = document.getElementById('loadingSavedBudgetsMessage');
+        const savedBudgetsInfoMessage = document.getElementById('savedBudgetsInfoMessage');
+        const noSavedBudgetsMessage = document.getElementById('noSavedBudgetsMessage');
+        const viewBudgetModal = document.getElementById('viewBudgetModal');
+        const viewBudgetModalTitle = document.getElementById('viewBudgetModalTitle');
+        const viewBudgetModalBody = document.getElementById('viewBudgetModalBody');
+        const closeViewBudgetModal = document.getElementById('closeViewBudgetModal');
+        const printFromModalBtn = document.getElementById('printFromModalBtn');
+
+        const printableArea = document.getElementById('printableArea');
+        
+        const addClientForm = document.getElementById('addClientForm');
+        const clientFormTitle = document.getElementById('clientFormTitle');
+        const editingClientIdInput = document.getElementById('editingClientId');
+        const clientNameInput = document.getElementById('clientName');
+        const clientDocumentTypeInput = document.getElementById('clientDocumentType');
+        const clientDocumentInput = document.getElementById('clientDocument');
+        const clientPhoneInput = document.getElementById('clientPhone');
+        const clientEmailInput = document.getElementById('clientEmail');
+        
+        const clientCepInput = document.getElementById('clientCep');
+        const clientStreetInput = document.getElementById('clientStreet');
+        const clientNumberInput = document.getElementById('clientNumber');
+        const clientNeighborhoodInput = document.getElementById('clientNeighborhood');
+        const clientCityInput = document.getElementById('clientCity');
+        const clientStateInput = document.getElementById('clientState');
+
+        const btnSaveClient = document.getElementById('btnSaveClient');
+        const btnCancelEditClient = document.getElementById('btnCancelEditClient');
+        const clientFormFeedback = document.getElementById('clientFormFeedback');
+        const clientsListDiv = document.getElementById('clientsList');
+        const noClientsMessage = document.getElementById('noClientsMessage');
+        const searchClientsInput = document.getElementById('searchClients');
+
+        // ----- FUNÇÕES DE VALIDAÇÃO E MÁSCARA PARA CPF/CNPJ -----
+
+        function isValidCPF(cpf) {
+            cpf = cpf.replace(/[^\d]+/g,'');
+            if(cpf == '') return false;
+            if (cpf.length != 11 || /^(\d)\1+$/.test(cpf)) return false;
+            let add = 0;
+            for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+            let rev = 11 - (add % 11);
+            if (rev == 10 || rev == 11) rev = 0;
+            if (rev != parseInt(cpf.charAt(9))) return false;
+            add = 0;
+            for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+            rev = 11 - (add % 11);
+            if (rev == 10 || rev == 11) rev = 0;
+            if (rev != parseInt(cpf.charAt(10))) return false;
+            return true;
+        }
+
+        function isValidCNPJ(cnpj) {
+            cnpj = cnpj.replace(/[^\d]+/g,'');
+            if(cnpj == '') return false;
+            if (cnpj.length != 14) return false;
+            if (/^(\d)\1+$/.test(cnpj)) return false;
+            let tamanho = cnpj.length - 2
+            let numeros = cnpj.substring(0,tamanho);
+            let digitos = cnpj.substring(tamanho);
+            let soma = 0;
+            let pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+            if (resultado != digitos.charAt(0)) return false;
+            tamanho = tamanho + 1;
+            numeros = cnpj.substring(0,tamanho);
+            soma = 0;
+            pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+            if (resultado != digitos.charAt(1)) return false;
+            return true;
+        }
+        
+        function applyDocumentMask(e) {
+            const input = e.target;
+            let value = input.value.replace(/\D/g, "");
+            const type = clientDocumentTypeInput.value;
+            if (type === 'cpf') {
+                value = value.replace(/(\d{3})(\d)/, "$1.$2");
+                value = value.replace(/(\d{3})(\d)/, "$1.$2");
+                value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                input.maxLength = 14;
+            } else {
+                value = value.replace(/^(\d{2})(\d)/, "$1.$2");
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+                value = value.replace(/\.(\d{3})(\d)/, ".$1/$2");
+                value = value.replace(/(\d{4})(\d)/, "$1-$2");
+                input.maxLength = 18;
+            }
+            input.value = value;
+        }
+
+        if(clientDocumentInput) clientDocumentInput.addEventListener('input', applyDocumentMask);
+        if(clientDocumentTypeInput) clientDocumentTypeInput.addEventListener('change', () => {
+            clientDocumentInput.value = '';
+            clientDocumentInput.placeholder = clientDocumentTypeInput.value === 'cpf' ? '000.000.000-00' : '00.000.000/0001-00';
+            applyDocumentMask({ target: clientDocumentInput });
+        });
+        
+        // ----- LÓGICA DE BUSCA DE DADOS (CEP E CNPJ) -----
+
+        const handleCepLookup = async () => {
+            const cep = clientCepInput.value.replace(/\D/g, '');
+            if (cep.length !== 8) return;
+            showFeedback(clientFormFeedback, "Buscando CEP...", false);
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+                clientFormFeedback.textContent = '';
+                if (data.erro) {
+                    showFeedback(clientFormFeedback, "CEP não encontrado.", true);
+                    return;
+                }
+                clientStreetInput.value = data.logradouro;
+                clientNeighborhoodInput.value = data.bairro;
+                clientCityInput.value = data.localidade;
+                clientStateInput.value = data.uf;
+                clientNumberInput.focus();
+            } catch (error) {
+                console.error("Erro ao buscar CEP:", error);
+                showFeedback(clientFormFeedback, "Erro ao consultar o CEP.", true);
+            }
+        };
+        
+        // NOVA FUNÇÃO para buscar dados do CNPJ
+        const handleCnpjLookup = async () => {
+            if (clientDocumentTypeInput.value !== 'cnpj') return;
+            const cnpj = clientDocumentInput.value.replace(/\D/g, '');
+            if (cnpj.length !== 14) return;
+            
+            showFeedback(clientFormFeedback, "Buscando dados do CNPJ...", false);
+            try {
+                const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+                if (!response.ok) {
+                    throw new Error(`CNPJ não encontrado ou API indisponível.`);
+                }
+                const data = await response.json();
+                clientFormFeedback.textContent = '';
+
+                clientNameInput.value = data.nome_fantasia || data.razao_social;
+                clientCepInput.value = data.cep;
+                clientStreetInput.value = data.logradouro;
+                clientNumberInput.value = data.numero;
+                clientNeighborhoodInput.value = data.bairro;
+                clientCityInput.value = data.municipio;
+                clientStateInput.value = data.uf;
+                
+                // Dispara a máscara do CEP após preencher
+                clientCepInput.dispatchEvent(new Event('input'));
+
+            } catch(error) {
+                console.error("Erro ao buscar CNPJ:", error);
+                showFeedback(clientFormFeedback, "Não foi possível buscar os dados. Verifique o CNPJ.", true);
+            }
+        };
+
+        if (clientCepInput) clientCepInput.addEventListener('blur', handleCepLookup);
+        if (clientDocumentInput) clientDocumentInput.addEventListener('blur', handleCnpjLookup);
+
+
+        function populateClientDatalist() {
+            if (!clientDatalist) return;
+            clientDatalist.innerHTML = '';
+            allClients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.name;
+                clientDatalist.appendChild(option);
+            });
+        }
+
+        function renderClients(clientsToRender) {
+            if (!clientsListDiv || !noClientsMessage) return;
+            clientsListDiv.innerHTML = '';
+            if (clientsToRender.length === 0) {
+                noClientsMessage.style.display = 'block';
+                clientsListDiv.style.display = 'none';
+                return;
+            }
+            noClientsMessage.style.display = 'none';
+            clientsListDiv.style.display = 'block';
+            clientsToRender.forEach(client => {
+                const clientCard = document.createElement('div');
+                clientCard.className = 'client-card card-hover bg-slate-100 p-5 rounded-lg shadow-md border border-slate-200';
+                
+                const fullAddress = [ client.street, client.number, client.neighborhood, client.city, client.state ].filter(Boolean).join(', ');
+
+                clientCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-lg font-semibold text-sky-800">${client.name}</h4>
+                            ${client.documentNumber ? `<p class="text-sm text-slate-600"><strong>${(client.documentType || 'cpf').toUpperCase()}:</strong> ${client.documentNumber}</p>` : ''}
+                            ${client.phone ? `<p class="text-sm text-slate-600"><strong>Tel:</strong> ${client.phone}</p>` : ''}
+                            ${client.email ? `<p class="text-sm text-slate-600"><strong>Email:</strong> ${client.email}</p>` : ''}
+                            ${fullAddress ? `<p class="text-sm text-slate-600 mt-1"><strong>End.:</strong> ${fullAddress}</p>` : ''}
+                        </div>
+                        <div class="flex flex-col space-y-2 items-end flex-shrink-0 ml-4">
+                            <button data-client-id="${client.id}" class="edit-client-btn text-xs bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600">Editar</button>
+                            <button data-client-id="${client.id}" data-client-name="${client.name}" class="delete-client-btn text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Apagar</button>
+                        </div>
+                    </div>`;
+                clientsListDiv.appendChild(clientCard);
+            });
+            document.querySelectorAll('.edit-client-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const clientId = e.target.dataset.clientId;
+                    const client = allClients.find(c => c.id === clientId);
+                    if (client) loadClientForEditing(client);
+                });
+            });
+            document.querySelectorAll('.delete-client-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const clientId = e.target.dataset.clientId;
+                    const clientName = e.target.dataset.clientName;
+                    const message = `Tem certeza que deseja excluir o cliente "${clientName}"?`;
+                    showConfirmModal('client', message, clientId);
+                });
+            });
+        }
+
+        function loadClientForEditing(client) {
+            clientFormTitle.textContent = "Editar Cliente";
+            editingClientIdInput.value = client.id;
+            clientNameInput.value = client.name;
+            clientDocumentTypeInput.value = client.documentType || 'cpf';
+            clientDocumentInput.value = client.documentNumber || '';
+            applyDocumentMask({ target: clientDocumentInput });
+            clientPhoneInput.value = client.phone || '';
+            clientEmailInput.value = client.email || '';
+            clientCepInput.value = client.cep || '';
+            clientStreetInput.value = client.street || '';
+            clientNumberInput.value = client.number || '';
+            clientNeighborhoodInput.value = client.neighborhood || '';
+            clientCityInput.value = client.city || '';
+            clientStateInput.value = client.state || '';
+            btnSaveClient.textContent = "Salvar Alterações";
+            btnCancelEditClient.style.display = 'inline-block';
+            addClientForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function resetClientForm() {
+            addClientForm.reset();
+            clientFormTitle.textContent = "Cadastrar Novo Cliente";
+            editingClientIdInput.value = '';
+            btnSaveClient.textContent = "Salvar Cliente";
+            btnCancelEditClient.style.display = 'none';
+        }
+        
+        if (btnCancelEditClient) btnCancelEditClient.addEventListener('click', resetClientForm);
+
+        function loadAndDisplayClients() {
+            if (!clientsCollectionRef) return;
+            unsubscribeClients = onSnapshot(clientsCollectionRef, (snapshot) => {
+                allClients = [];
+                snapshot.forEach(doc => allClients.push({ id: doc.id, ...doc.data() }));
+                allClients.sort((a, b) => a.name.localeCompare(b.name));
+                performSearchClients();
+                populateClientDatalist();
+            }, (error) => {
+                console.error("Erro ao carregar clientes:", error);
+                if(noClientsMessage) noClientsMessage.textContent = "Erro ao carregar clientes.";
+            });
+        }
+        
+        function performSearchClients() {
+            if(!searchClientsInput) return;
+            const searchTerm = searchClientsInput.value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderClients(allClients);
+                return;
+            }
+            const filteredClients = allClients.filter(client => {
+                return client.name.toLowerCase().includes(searchTerm) ||
+                       (client.phone && client.phone.includes(searchTerm)) ||
+                       (client.documentNumber && client.documentNumber.includes(searchTerm));
+            });
+            renderClients(filteredClients);
+        }
+
+        if (searchClientsInput) searchClientsInput.addEventListener('input', performSearchClients);
+
+        if (addClientForm) {
+            addClientForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const docType = clientDocumentTypeInput.value;
+                const docNumber = clientDocumentInput.value;
+                if(docNumber) {
+                    if (docType === 'cpf' && !isValidCPF(docNumber)) {
+                        showFeedback(clientFormFeedback, "CPF inválido. Por favor, verifique o número.", true);
+                        return;
+                    }
+                    if (docType === 'cnpj' && !isValidCNPJ(docNumber)) {
+                        showFeedback(clientFormFeedback, "CNPJ inválido. Por favor, verifique o número.", true);
+                        return;
+                    }
+                }
+
+                const editingId = editingClientIdInput.value;
+                const clientData = {
+                    name: clientNameInput.value.trim(),
+                    documentType: docType,
+                    documentNumber: docNumber,
+                    phone: clientPhoneInput.value.trim(),
+                    email: clientEmailInput.value.trim(),
+                    cep: clientCepInput.value.trim(),
+                    street: clientStreetInput.value.trim(),
+                    number: clientNumberInput.value.trim(),
+                    neighborhood: clientNeighborhoodInput.value.trim(),
+                    city: clientCityInput.value.trim(),
+                    state: clientStateInput.value.trim().toUpperCase(),
+                    updatedAt: serverTimestamp()
+                };
+                try {
+                    if (editingId) {
+                        const clientDocRef = doc(clientsCollectionRef, editingId);
+                        await updateDoc(clientDocRef, clientData);
+                        showFeedback(clientFormFeedback, "Cliente atualizado com sucesso!", false);
+                    } else {
+                        clientData.createdAt = serverTimestamp();
+                        await addDoc(clientsCollectionRef, clientData);
+                        showFeedback(clientFormFeedback, "Cliente salvo com sucesso!", false);
+                    }
+                    resetClientForm();
+                } catch (error) {
+                    console.error("Erro ao salvar cliente:", error);
+                    showFeedback(clientFormFeedback, "Erro ao salvar cliente.", true);
+                }
+            });
+        }
+
+        if (LOGO_URL) {
+            if(companyLogo) companyLogo.src = LOGO_URL;
+            if(loginLogo) loginLogo.src = LOGO_URL;
+        } else {
+            if(companyLogo) companyLogo.style.display = 'none';
+            if(loginLogo) loginLogo.style.display = 'none';
+        }
+        if(document.getElementById('mainCompanyName')) document.getElementById('mainCompanyName').textContent = NOME_EMPRESA;
+        if(loginCompanyName) loginCompanyName.textContent = NOME_EMPRESA;
+        
+        function showFeedback(element, message, isError = false) {
+            if (element) {
+                element.textContent = message;
+                element.className = `mt-3 text-sm ${isError ? 'text-red-600' : 'text-green-600'}`;
+                setTimeout(() => { if (element) element.textContent = ''; }, 4000);
+            } else {
+                 console.warn("Elemento de feedback não encontrado para a mensagem:", message);
+            }
+        }
+
+        const handleGoogleLogin = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Erro no login com Google: ", error);
+                if (loginFeedback) loginFeedback.textContent = "Erro ao tentar fazer login. Tente novamente.";
+            }
+        };
+
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Erro ao fazer logout: ", error);
+            }
+        };
+
+        if (googleLoginBtn) googleLoginBtn.addEventListener('click', handleGoogleLogin);
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+                if (loginScreen) loginScreen.style.display = 'none';
+                if (mainAppContent) mainAppContent.style.display = 'block';
+
+                materialsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/materials`);
+                savedBudgetsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/orcamentos_salvos`);
+                clientsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/clients`);
+                
+                loadAndDisplayCatalogMaterials();
+                loadAndDisplaySavedBudgets();
+                loadAndDisplayClients();
+
+            } else {
+                userId = null;
+                if (loginScreen) loginScreen.style.display = 'block';
+                if (mainAppContent) mainAppContent.style.display = 'none';
+
+                if (unsubscribeMaterials) unsubscribeMaterials();
+                if (unsubscribeBudgets) unsubscribeBudgets();
+                if (unsubscribeClients) unsubscribeClients();
+                
+                allMaterials = [];
+                allSavedBudgets = [];
+                allClients = [];
+                if (clientDatalist) clientDatalist.innerHTML = '';
+                renderCatalogMaterials([]);
+                renderSavedBudgets([]);
+                renderClients([]);
+                renderOrcamentoItens();
+                limparFormularioOrcamento();
+                resetClientForm();
+            }
+        });
+        
+        // O restante do código, que não foi modificado, continua abaixo...
+        // ... (o código restante é o mesmo das mensagens anteriores) ...
+        
+    </script>
+</body>
+</html>
