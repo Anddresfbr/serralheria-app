@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serralheria Bom Preço - Gerenciador</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 1rem; }
+        .modal-content { background-color: #1f2937; color: #e5e7eb; margin: auto; padding: 25px; border: 1px solid #374151; width: 90%; max-width: 600px; border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        @media print { /* ... seus estilos de impressão ... */ }
+        #printableArea { display: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen">
+
+    <div id="login-screen" class="bg-white shadow-2xl rounded-xl p-10 w-full max-w-md text-center" style="display: none;">
+        <div class="flex flex-col items-center mb-4">
+            <img src="" alt="Logo da Empresa" id="loginLogo" class="max-w-[150px] mb-3 rounded-md bg-white p-1 shadow-sm">
+            <h1 id="loginCompanyName" class="text-3xl font-bold text-gray-800">Carregando...</h1>
+        </div>
+        <p class="text-gray-600 mb-8">Bem-vindo ao Gerenciador de Orçamentos.</p>
+        <button id="google-login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center space-x-3">
+            <svg class="w-6 h-6" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.012 36.49 44 30.686 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+            <span>Entrar com Google</span>
+        </button>
+        <p id="loginFeedback" class="mt-4 text-sm text-red-600"></p>
+    </div>
+
+    <div id="app-container" class="w-full max-w-4xl mx-auto" style="display: none;" x-data="{ isMenuOpen: false }" @keydown.escape.window="isMenuOpen = false">
+        
+        <aside x-show="isMenuOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-4/5 max-w-sm bg-white shadow-lg flex flex-col" @click.away="isMenuOpen = false">
+             </aside>
+
+        <div x-show="isMenuOpen" class="fixed inset-0 bg-black/30 z-40" @click="isMenuOpen = false"></div>
+        
+        <div class="bg-white shadow-xl rounded-xl p-4 sm:p-6 w-full text-slate-800 no-print">
+            <header class="mb-6 text-center relative flex items-center justify-between">
+                <button id="btn-back-to-home" title="Voltar ao Início" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <h1 id="main-app-title" class="text-xl font-bold text-gray-800 absolute left-1/2 -translate-x-1/2"></h1>
+                <div class="w-10"></div> </header>
+
+            </div>
+    </div>
+    
+    <div id="home-screen" class="w-full max-w-md mx-auto" style="display: none;">
+        </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // GARANTE QUE O SCRIPT RODE APÓS O HTML ESTAR PRONTO
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDNoUVzHRmYNnfd-Vi9yskTlugIV2HsZQ4",
+                authDomain: "app-serralheria-c5525.firebaseapp.com",
+                projectId: "app-serralheria-c5525",
+                storageBucket: "app-serralheria-c5525.appspot.com",
+                messagingSenderId: "838030423072",
+                appId: "1:838030423072:web:ba1f50774cd612e60b7845"
+            };
+            
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            
+            // Suas variáveis globais
+            let userId = null;
+            // ... (todas as suas outras variáveis)
+
+            // Referências do DOM
+            const loginScreen = document.getElementById('login-screen');
+            const homeScreen = document.getElementById('home-screen');
+            const mainAppContent = document.getElementById('main-app-content');
+            const mainAppTitle = document.getElementById('main-app-title');
+            // ... (todas as suas outras referências)
+
+            function showHomeScreen() {
+                homeScreen.style.display = 'block';
+                mainAppContent.style.display = 'none';
+                loginScreen.style.display = 'none';
+            }
+
+            function navigateToSection(targetId, title) {
+                homeScreen.style.display = 'none';
+                mainAppContent.style.display = 'block';
+                mainAppTitle.textContent = title;
+                // ... (resto da sua lógica de navegação interna)
+            }
+
+            function setupNavigation() {
+                // ... (seus listeners, ex: document.getElementById('btn-back-to-home')...)
+            }
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    // ... (sua lógica de quando o usuário está logado)
+                    showHomeScreen();
+                    setupNavigation();
+                    // ... (sua lógica de carregar dados)
+                } else {
+                    userId = null;
+                    homeScreen.style.display = 'none';
+                    mainAppContent.style.display = 'none';
+                    loginScreen.style.display = 'block';
+                    // ... (sua lógica de logout)
+                }
+            });
+
+            // ... (O RESTO DE TODAS AS SUAS FUNÇÕES ORIGINAIS AQUI)
+            // (getStatusInfo, renderSavedBudgets, handleGoogleLogin, etc.)
+        });
+    </script>
+</body>
+</html>
